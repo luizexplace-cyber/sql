@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biblioteca Completa</title>
+<style>
+  /* ====== Reset / Base ====== */
+  :root{
+    --bg:#f4f7fd;
+    --card:#fff;
+    --primary:#2b6ef6;
+    --danger:#e74c3c;
+    --success:#0b5f26;
+    --muted:#6b7280;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:Arial, sans-serif;background:var(--bg);color:#111;}
+  h1,h2,h3,h4{margin:0 0 10px 0;}
+  small{color:var(--muted);}
+  .wrap{max-width:1200px;margin:20px auto;padding:20px;}
+  .card{background:var(--card);border-radius:10px;padding:20px;box-shadow:0 5px 20px rgba(0,0,0,0.05);margin-bottom:20px;}
+  input, select, button{padding:10px;border-radius:6px;border:1px solid #ccc;font-size:15px;}
+  button{cursor:pointer;background:var(--primary);color:#fff;border:none;}
+  button.ghost{background:transparent;color:var(--primary);border:1px solid var(--primary);}
+  button.warn{background:var(--danger);}
+  .row{display:flex;gap:10px;align-items:center;}
+  .grid{display:grid;gap:10px;}
+  .cols-2{grid-template-columns:1fr 1fr;}
+  .hidden{display:none;}
+  table{width:100%;border-collapse:collapse;margin-top:10px;}
+  th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;}
+  th{color:var(--muted);}
+  .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#27308a;font-weight:600;font-size:12px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
+  footer{text-align:center;color:var(--muted);margin-top:20px;}
+  .alert{padding:10px;margin:10px 0;border-radius:6px;}
+  .alert.success{background:#eef9f0;color:var(--success);}
+  .alert.error{background:#ffeff0;color:#e74c3c;}
+  @media (max-width:720px){.cols-2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="topbar">
+      <h1>Biblioteca Completa</h1>
+      <div id="current-user" class="muted">Não autenticado</div>
+    </div>
+
+    <div class="row" id="nav">
+      <button id="btn-login">Login</button>
+      <button id="btn-register" class="ghost">Registrar Aluno</button>
+      <button id="btn-reset" class="ghost">Resetar Dados</button>
+    </div>
+
+    <div id="alerts"></div>
+
+    <!-- LOGIN -->
+    <section id="view-login">
+      <h2>Login</h2>
+      <form id="form-login">
+        <div class="grid cols-2">
+          <label>Email<input type="email" id="login-email" required></label>
+          <label>Senha<input type="password" id="login-password" required></label>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <button type="submit">Entrar</button>
+          <button type="button" id="show-register" class="ghost">Registrar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- REGISTER -->
+    <section id="view-register" class="hidden">
+      <h2>Registrar Aluno</h2>
+      <form id="form-register">
+        <div class="grid">
+          <label>Nome<input id="r-name" type="text" required></label>
+          <label>Email<input id="r-email" type="email" required></label>
+          <label>Senha<input id="r-password" type="password" required></label>
+          <label>Matrícula<input id="r-matricula" type="text" required></label>
+          <label>Curso<input id="r-curso" type="text"></label>
+          <label>Ano de Ingresso<input id="r-ano" type="number"></label>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <button type="submit">Registrar</button>
+          <button type="button" id="back-login" class="ghost">Voltar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="view-dashboard" class="hidden">
+      <h2 id="dashboard-title">Dashboard</h2>
+      <small id="dashboard-role" class="muted"></small>
+
+      <!-- Alunos -->
+      <div id="students-area" class="card hidden">
+        <h3>Gerenciar Alunos</h3>
+        <form id="form-add-student" class="grid cols-2">
+          <label>Nome<input id="s-name" type="text" required></label>
+          <label>Email<input id="s-email" type="email" required></label>
+          <label>Senha<input id="s-password" type="password" required></label>
+          <label>Matrícula<input id="s-matricula" type="text" required></label>
+          <label>Curso<input id="s-curso" type="text"></label>
+          <label>Ano de ingresso<input id="s-ano" type="number"></label>
+          <button type="submit">Adicionar Aluno</button>
+        </form>
+        <div id="students-list"></div>
+      </div>
+
+      <!-- Livros -->
+      <div id="books-area" class="card hidden">
+        <h3>Gerenciar Livros</h3>
+        <form id="form-add-book" class="grid cols-2">
+          <label>Título<input id="b-title" type="text" required></label>
+          <label>Autor<input id="b-author" type="text" required></label>
+          <label>Ano<input id="b-year" type="number"></label>
+          <label>Categoria<input id="b-category" type="text"></label>
+          <button type="submit">Adicionar Livro</button>
+        </form>
+        <div id="books-list"></div>
+      </div>
+
+      <!-- Empréstimos -->
+      <div id="loans-area" class="card hidden">
+        <h3>Registrar Empréstimo</h3>
+        <form id="form-loan" class="grid cols-2">
+          <label>Aluno
+            <select id="loan-student"></select>
+          </label>
+          <label>Livro
+            <select id="loan-book"></select>
+          </label>
+          <button type="submit">Registrar Empréstimo</button>
+        </form>
+        <div id="loans-list"></div>
+      </div>
+
+      <!-- Relatórios -->
+      <div id="reports-area" class="card hidden">
+        <h3>Relatórios</h3>
+        <div id="report-content"></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  // ===== Utils =====
+  const alerts = document.getElementById('alerts');
+  function showAlert(msg,type='error'){
+    const div=document.createElement('div');
+    div.className='alert '+(type==='error'?'error':'success');
+    div.innerText=msg;
+    alerts.appendChild(div);
+    setTimeout(()=>div.remove(),5000);
+  }
+  function escapeHTML(str){return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+  // ===== Storage =====
+  const USERS_KEY='lib_users';
+  const BOOKS_KEY='lib_books';
+  const LOANS_KEY='lib_loans';
+
+  function load(key){return JSON.parse(localStorage.getItem(key)||'[]');}
+  function save(key,data){localStorage.setItem(key,JSON.stringify(data));}
+
+  // ===== DOM Elements =====
+  const views={login:document.getElementById('view-login'),register:document.getElementById('view-register'),dashboard:document.getElementById('view-dashboard')};
+  const nav={login:document.getElementById('btn-login'),register:document.getElementById('btn-register'),reset:document.getElementById('btn-reset')};
+  const currentUserEl=document.getElementById('current-user');
+
+  // ===== Init =====
+  function showView(name){
+    Object.values(views).forEach(v=>v.classList.add('hidden'));
+    views[name].classList.remove('hidden');
+  }
+
+  // ===== Navigation =====
+  nav.login.addEventListener('click',()=>showView('login'));
+  nav.register.addEventListener('click',()=>showView('register'));
+  document.getElementById('show-register').addEventListener('click',()=>showView('register'));
+  document.getElementById('back-login').addEventListener('click',()=>showView('login'));
+  nav.reset.addEventListener('click',()=>{localStorage.clear();location.reload();});
+
+  // ===== Users =====
+  async function hash(p){ // simple hash
+    const enc=new TextEncoder();
+    const data=enc.encode(p);
+    const hash=await crypto.subtle.digest('SHA-256',data);
+    return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function ensureAdmin(){
+    let users=load(USERS_KEY);
+    if(!users.some(u=>u.role==='admin')){
+      const pwd=await hash('Admin@123');
+      users.push({id:Date.now(),name:'Admin',email:'admin@lib.local',password:pwd,role:'admin',blocked:false});
+      save(USERS_KEY,users);
+      showAlert('Admin criado: admin@lib.local / Admin@123','success');
+    }
+  }
+
+  ensureAdmin();
+
+  // ===== Login =====
+  document.getElementById('form-login').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const email=document.getElementById('login-email').value;
+    const pwd=document.getElementById('login-password').value;
+    const users=load(USERS_KEY);
+    const u=users.find(u=>u.email===email);
+    if(!u){showAlert('Email incorreto');return;}
+    if(u.blocked){showAlert('Usuário bloqueado');return;}
+    const hashPwd=await hash(pwd);
+    if(hashPwd!==u.password){showAlert('Senha incorreta');return;}
+    sessionStorage.setItem('lib_session',JSON.stringify({id:u.id}));
+    showAlert('Login efetuado','success');
+    renderDashboard();
+    showView('dashboard');
+  });
+
+  // ===== Register =====
+  document.getElementById('form-register').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const name=document.getElementById('r-name').value;
+    const email=document.getElementById('r-email').value;
+    const password=document.getElementById('r-password').value;
+    const matricula=document.getElementById('r-matricula').value;
+    const curso=document.getElementById('r-curso').value;
+    const ano=document.getElementById('r-ano').value;
+    let users=load(USERS_KEY);
+    if(users.some(u=>u.email===email)){showAlert('Email já existe');return;}
+    const pwdHash=await hash(password);
+    users.push({id:Date.now(),name,email,password:pwdHash,role:'student',blocked:false,matricula,curso,ano_ingresso:ano});
+    save(USERS_KEY,users);
+    showAlert('Aluno registrado','success');
+    showView('login');
+  });
+
+  // ===== Dashboard =====
+  function getCurrentUser(){const s=sessionStorage.getItem('lib_session');if(!s)return null;const id=JSON.parse(s).id;return load(USERS_KEY).find(u=>u.id===id);}
+  function renderDashboard(){
+    const u=getCurrentUser();
+    if(!u)return;
+    currentUserEl.innerText=u.name+' ('+u.role+')';
+    document.getElementById('dashboard-title').innerText='Bem-vindo, '+u.name;
+    document.getElementById('dashboard-role').innerText='Função: '+u.role;
+    // show sections for admin
+    if(u.role==='admin'){
+      document.getElementById('students-area').classList.remove('hidden');
+      document.getElementById('books-area').classList.remove('hidden');
+      document.getElementById('loans-area').classList.remove('hidden');
+      document.getElementById('reports-area').classList.remove('hidden');
+      renderStudents();renderBooks();renderLoans();renderReports();
+    }
+  }
+
+  // ===== Students =====
+  document.getElementById('form-add-student').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const name=document.getElementById('s-name').value;
+    const email=document.getElementById('s-email').value;
+    const password=document.getElementById('s-password').value;
+    const matricula=document.getElementById('s-matricula').value;
+    const curso=document.getElementById('s-curso').value;
+    const ano=document.getElementById('s-ano').value;
+    let users=load(USERS_KEY);
+    if(users.some(u=>u.email===email)){showAlert('Email já existe');return;}
+    const pwdHash=await hash(password);
+    users.push({id:Date.now(),name,email,password:pwdHash,role:'student',blocked:false,matricula,curso,ano_ingresso:ano});
+    save(USERS_KEY,users);
+    showAlert('Aluno adicionado','success');
+    renderStudents();
+  });
+
+  function renderStudents(){
+    const container=document.getElementById('students-list');
+    const users=load(USERS_KEY).filter(u=>u.role==='student');
+    if(!users.length){container.innerHTML='<p class="muted">Nenhum aluno cadastrado.</p>';return;}
+    let html='<table><thead><tr><th>Nome</th><th>Email</th><th>Matrícula</th><th>Curso</th><th>Ano</th><th>Bloqueado</th><th>Ações</th></tr></thead><tbody>';
+    users.forEach(u=>{
+      html+='<tr><td>'+escapeHTML(u.name)+'</td><td>'+escapeHTML(u.email)+'</td><td>'+escapeHTML(u.matricula)+'</td><td>'+escapeHTML(u.curso||'')+'</td><td>'+escapeHTML(u.ano_ingresso||'')+'</td><td>'+(u.blocked?'<span class="pill">Sim</span>':'Não')+'</td><td>';
+      html+='<button onclick="toggleBlock('+u.id+')">'+(u.blocked?'Desbloquear':'Bloquear')+'</button></td></tr>';
+    });
+    html+='</tbody></table>'; container.innerHTML=html;
+  }
+
+  window.toggleBlock=function(id){
+    const users=load(USERS_KEY);
+    const u=users.find(x=>x.id===id);
+    u.blocked=!u.blocked;
+    save(USERS_KEY,users);
+    renderStudents();
+  }
+
+  // ===== Books =====
+  document.getElementById('form-add-book').addEventListener('submit',e=>{
+    e.preventDefault();
+    const title=document.getElementById('b-title').value;
+    const author=document.getElementById('b-author').value;
+    const year=document.getElementById('b-year').value;
+    const category=document.getElementById('b-category').value;
+    const books=load(BOOKS_KEY);
+    books.push({id:Date.now(),title,author,year,category});
+    save(BOOKS_KEY,books);
+    showAlert('Livro adicionado','success');
+    renderBooks();
+  });
+
+  function renderBooks(){
+    const container=document.getElementById('books-list');
+    const books=load(BOOKS_KEY);
+    if(!books.length){container.innerHTML='<p class="muted">Nenhum livro cadastrado.</p>';return;}
+    let html='<table><thead><tr><th>Título</th><th>Autor</th><th>Ano</th><th>Categoria</th></tr></thead><tbody>';
+    books.forEach(b=>{html+='<tr><td>'+escapeHTML(b.title)+'</td><td>'+escapeHTML(b.author)+'</td><td>'+escapeHTML(b.year||'')+'</td><td>'+escapeHTML(b.category||'')+'</td></tr>';});
+    html+='</tbody></table>';container.innerHTML=html;
+  }
+
+  // ===== Loans =====
+  function renderLoans(){
+    const container=document.getElementById('loans-list');
+    const loans=load(LOANS_KEY);
+    if(!loans.length){container.innerHTML='<p class="muted">Nenhum empréstimo.</p>';return;}
+    let html='<table><thead><tr><th>Aluno</th><th>Livro</th><th>Data</th></tr></thead><tbody>';
+    loans.forEach(l=>{
+      const u=load(USERS_KEY).find(x=>x.id===l.studentId);
+      const b=load(BOOKS_KEY).find(x=>x.id===l.bookId);
+      html+='<tr><td>'+escapeHTML(u?.name||'')+'</td><td>'+escapeHTML(b?.title||'')+'</td><td>'+l.date+'</td></tr>';
+    });
+    html+='</tbody></table>';container.innerHTML=html;
+
+    // Fill select for new loans
+    const ssel=document.getElementById('loan-student');
+    const bsel=document.getElementById('loan-book');
+    ssel.innerHTML='';bsel.innerHTML='';
+    load(USERS_KEY).filter(u=>u.role==='student').forEach(u=>ssel.innerHTML+='<option value="'+u.id+'">'+escapeHTML(u.name)+'</option>');
+    load(BOOKS_KEY).forEach(b=>bsel.innerHTML+='<option value="'+b.id+'">'+escapeHTML(b.title)+'</option>');
+  }
+
+  document.getElementById('form-loan').addEventListener('submit',e=>{
+    e.preventDefault();
+    const studentId=parseInt(document.getElementById('loan-student').value);
+    const bookId=parseInt(document.getElementById('loan-book').value);
+    const loans=load(LOANS_KEY);
+    loans.push({studentId,bookId,date:new Date().toLocaleDateString()});
+    save(LOANS_KEY,loans);
+    showAlert('Empréstimo registrado','success');
+    renderLoans();
+  });
+
+  // ===== Reports =====
+  function renderReports(){
+    const students=load(USERS_KEY).filter(u=>u.role==='student').length;
+    const books=load(BOOKS_KEY).length;
+    const loans=load(LOANS_KEY).length;
+    document.getElementById('report-content').innerHTML='<p>Total de alunos: '+students+'</p><p>Total de livros: '+books+'</p><p>Total de empréstimos: '+loans+'</p>';
+  }
+</script>
+<footer>
+  <small>Biblioteca completa - Frontend apenas</small>
+</footer>
+</body>
+</html>
