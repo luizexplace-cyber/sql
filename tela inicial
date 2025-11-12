@@ -1,0 +1,268 @@
+class Livro:
+    """Representa um livro na biblioteca."""
+    def __init__(self, titulo, autor, isbn, quantidade_total):
+        self.titulo = titulo
+        self.autor = autor
+        self.isbn = isbn
+        self.quantidade_total = quantidade_total
+        self.quantidade_disponivel = quantidade_total
+        self.emprestado_por = [] # Lista de IDs de usuários com este livro
+
+    def __str__(self):
+        return f"Título: {self.titulo}, Autor: {self.autor}, ISBN: {self.isbn}, Disponível: {self.quantidade_disponivel}/{self.quantidade_total}"
+
+class Usuario:
+    """Representa um membro da biblioteca."""
+    def __init__(self, nome, user_id):
+        self.nome = nome
+        self.user_id = user_id
+        self.livros_emprestados = [] # Lista de ISBNs de livros emprestados
+
+    def __str__(self):
+        return f"Nome: {self.nome}, ID: {self.user_id}, Livros Emprestados: {len(self.livros_emprestados)}"
+
+class Biblioteca:
+    """Controla o gerenciamento de livros, usuários e empréstimos."""
+    def __init__(self):
+        self.livros = {}  # ISBN -> Livro
+        self.usuarios = {} # UserID -> Usuario
+        self.admin_password = "admin" # Senha de administrador
+
+    def login_admin(self):
+        """Autentica o administrador."""
+        senha = input("Digite a senha de administrador: ")
+        return senha == self.admin_password
+
+    # ------------------------------------------------------------------
+    # --- Funções de Gerenciamento de Livros (CRUD) ---
+    # ------------------------------------------------------------------
+    def adicionar_livro(self):
+        """Adiciona um novo livro ou atualiza a quantidade de um existente."""
+        titulo = input("Título do livro: ")
+        autor = input("Autor do livro: ")
+        isbn = input("ISBN do livro: ")
+        try:
+            quantidade = int(input("Quantidade total de exemplares: "))
+            if quantidade <= 0:
+                print("Quantidade deve ser um número positivo.")
+                return
+        except ValueError:
+            print("Quantidade inválida. Digite um número.")
+            return
+
+        if isbn in self.livros:
+            print(f"Livro com ISBN {isbn} já existe. Atualizando quantidade.")
+            self.livros[isbn].quantidade_total += quantidade
+            self.livros[isbn].quantidade_disponivel += quantidade
+        else:
+            self.livros[isbn] = Livro(titulo, autor, isbn, quantidade)
+        print(f"Livro '{titulo}' adicionado/atualizado com sucesso.")
+
+    def remover_livro(self):
+        """Remove um livro se todos os exemplares estiverem disponíveis."""
+        isbn = input("ISBN do livro a ser removido: ")
+        if isbn in self.livros:
+            if self.livros[isbn].quantidade_total > self.livros[isbn].quantidade_disponivel:
+                print("Impossível remover. Existem exemplares emprestados.")
+            else:
+                del self.livros[isbn]
+                print(f"Livro com ISBN {isbn} removido.")
+        else:
+            print("Livro não encontrado.")
+
+    def listar_livros(self):
+        """Exibe todos os livros no acervo."""
+        if not self.livros:
+            print("Nenhum livro na biblioteca.")
+            return
+        print("\n--- Livros na Biblioteca ---")
+        for livro in self.livros.values():
+            print(livro)
+        print("--------------------------")
+
+    def buscar_livro(self):
+        """Busca livros por título, autor ou ISBN."""
+        termo = input("Digite o título, autor ou ISBN para buscar: ").lower()
+        resultados = [livro for livro in self.livros.values()
+                      if termo in livro.titulo.lower() or
+                         termo in livro.autor.lower() or
+                         termo == livro.isbn.lower()]
+        if resultados:
+            print("\n--- Resultados da Busca ---")
+            for livro in resultados:
+                print(livro)
+            print("--------------------------")
+        else:
+            print("Nenhum livro encontrado com o termo fornecido.")
+
+    # ------------------------------------------------------------------
+    # --- Funções de Gerenciamento de Usuários (CRUD) ---
+    # ------------------------------------------------------------------
+    def adicionar_usuario(self):
+        """Adiciona um novo usuário."""
+        nome = input("Nome do novo usuário: ")
+        user_id = input("ID do usuário (ex: RA, Matrícula): ")
+        if user_id in self.usuarios:
+            print(f"Usuário com ID {user_id} já existe.")
+        else:
+            self.usuarios[user_id] = Usuario(nome, user_id)
+            print(f"Usuário '{nome}' com ID {user_id} adicionado.")
+
+    def remover_usuario(self):
+        """Remove um usuário se ele não tiver livros emprestados."""
+        user_id = input("ID do usuário a ser removido: ")
+        if user_id in self.usuarios:
+            if self.usuarios[user_id].livros_emprestados:
+                print("Impossível remover. Usuário possui livros emprestados.")
+            else:
+                del self.usuarios[user_id]
+                print(f"Usuário com ID {user_id} removido.")
+        else:
+            print("Usuário não encontrado.")
+
+    def listar_usuarios(self):
+        """Exibe todos os usuários cadastrados."""
+        if not self.usuarios:
+            print("Nenhum usuário cadastrado.")
+            return
+        print("\n--- Usuários Cadastrados ---")
+        for usuario in self.usuarios.values():
+            print(usuario)
+        print("----------------------------")
+
+    # ------------------------------------------------------------------
+    # --- Funções de Empréstimo e Devolução ---
+    # ------------------------------------------------------------------
+    def emprestar_livro(self):
+        """Registra o empréstimo de um livro para um usuário."""
+        user_id = input("ID do usuário: ")
+        if user_id not in self.usuarios:
+            print("Usuário não encontrado.")
+            return
+
+        isbn = input("ISBN do livro a ser emprestado: ")
+        if isbn not in self.livros:
+            print("Livro não encontrado.")
+            return
+
+        livro = self.livros[isbn]
+        usuario = self.usuarios[user_id]
+
+        if livro.quantidade_disponivel > 0:
+            if isbn not in usuario.livros_emprestados: 
+                livro.quantidade_disponivel -= 1
+                livro.emprestado_por.append(user_id)
+                usuario.livros_emprestados.append(isbn)
+                print(f"Livro '{livro.titulo}' emprestado para '{usuario.nome}'.")
+            else:
+                print(f"Usuário '{usuario.nome}' já possui um exemplar deste livro.")
+        else:
+            print(f"Livro '{livro.titulo}' não está disponível para empréstimo.")
+
+    def devolver_livro(self):
+        """Registra a devolução de um livro."""
+        user_id = input("ID do usuário: ")
+        if user_id not in self.usuarios:
+            print("Usuário não encontrado.")
+            return
+
+        isbn = input("ISBN do livro a ser devolvido: ")
+        if isbn not in self.livros:
+            print("Livro não encontrado.")
+            return
+
+        livro = self.livros[isbn]
+        usuario = self.usuarios[user_id]
+
+        if isbn in usuario.livros_emprestados:
+            livro.quantidade_disponivel += 1
+            # Remoção segura do user_id da lista de emprestados pelo livro
+            if user_id in livro.emprestado_por:
+                livro.emprestado_por.remove(user_id) 
+            usuario.livros_emprestados.remove(isbn)
+            print(f"Livro '{livro.titulo}' devolvido por '{usuario.nome}'.")
+        else:
+            print(f"Usuário '{usuario.nome}' não emprestou o livro '{livro.titulo}'.")
+    
+    # ------------------------------------------------------------------
+    # --- Menus de Navegação (Interface do ADM) ---
+    # ------------------------------------------------------------------
+    def menu_admin(self):
+        """Menu principal do Administrador, requer login."""
+        if not self.login_admin():
+            print("Senha de administrador incorreta. Acesso negado.")
+            return
+
+        while True:
+            print("\n--- Menu do Administrador ---")
+            print("1. Gerenciar Livros")
+            print("2. Gerenciar Usuários")
+            print("3. Gerenciar Empréstimos")
+            print("0. Sair do Admin")
+            escolha_admin = input("Escolha uma opção: ")
+
+            if escolha_admin == '1':
+                self._menu_livros()
+            elif escolha_admin == '2':
+                self._menu_usuarios()
+            elif escolha_admin == '3':
+                self._menu_emprestimos()
+            elif escolha_admin == '0':
+                print("Saindo do modo administrador. O sistema será encerrado.")
+                break
+            else:
+                print("Opção inválida. Tente novamente.")
+
+    def _menu_livros(self):
+        """Sub-menu para gerenciar o acervo."""
+        while True:
+            print("\n--- Gerenciar Livros ---")
+            print("1. Adicionar Livro")
+            print("2. Remover Livro")
+            print("3. Listar Todos")
+            print("4. Buscar Livro")
+            print("0. Voltar")
+            escolha = input("Escolha uma opção: ")
+
+            if escolha == '1': self.adicionar_livro()
+            elif escolha == '2': self.remover_livro()
+            elif escolha == '3': self.listar_livros()
+            elif escolha == '4': self.buscar_livro()
+            elif escolha == '0': break
+            else: print("Opção inválida.")
+
+    def _menu_usuarios(self):
+        """Sub-menu para gerenciar usuários."""
+        while True:
+            print("\n--- Gerenciar Usuários ---")
+            print("1. Adicionar Usuário")
+            print("2. Remover Usuário")
+            print("3. Listar Usuários")
+            print("0. Voltar")
+            escolha = input("Escolha uma opção: ")
+
+            if escolha == '1': self.adicionar_usuario()
+            elif escolha == '2': self.remover_usuario()
+            elif escolha == '3': self.listar_usuarios()
+            elif escolha == '0': break
+            else: print("Opção inválida.")
+
+    def _menu_emprestimos(self):
+        """Sub-menu para gerenciar empréstimos/devoluções."""
+        while True:
+            print("\n--- Gerenciar Empréstimos ---")
+            print("1. Emprestar Livro")
+            print("2. Devolver Livro")
+            print("0. Voltar")
+            escolha = input("Escolha uma opção: ")
+
+            if escolha == '1': self.emprestar_livro()
+            elif escolha == '2': self.devolver_livro()
+            elif escolha == '0': break
+            else: print("Opção inválida.")
+
+# --- Execução Principal ---
+if __name__ == "__main__":
+    biblioteca = Biblioteca()
+    # Para iniciar, o administrador deve digitar 'admin'
+    biblioteca.menu_admin()
